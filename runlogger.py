@@ -34,6 +34,8 @@ def display_help():
     print('-km          distance ran in kilometers')
     print('Sample usage:')
     print('python runlogger.py -m 5 -t 35:23 -n "hard pace. felt good')
+    print('python runlogger.py -t 1:05:23 -n "long run. didnt keep track of distance but probably 8 miles"')
+    print('python runlogger.py -m 8.3 -n "strong run. didnt have my watch. probably 7min/mile pace"')
     
 def convert_distance(dist, output_units):
     if output_units == 'miles':
@@ -46,12 +48,12 @@ def convert_distance(dist, output_units):
 # TODO: Maybe not the best way to do this.
 def validate_arg(arg_name, arg_val):
     '''
-        return:
-            True or False depending on whether or not given arg_val is appropriate for
-            the given arg_name
-        inputs:
-            arg_name: a string. Should be one of the keys of ARG_ABBREVIATIONS
-            arg_val: a string
+    return:
+        True or False depending on whether or not given arg_val is appropriate for
+        the given arg_name
+    inputs:
+        arg_name: a string. Should be one of the keys of ARG_ABBREVIATIONS
+        arg_val: a string
     '''
     if arg_name == ARG_TIME:
         # Allow user to omit the hours since most runs will probably be less than an hour
@@ -71,12 +73,12 @@ def validate_arg(arg_name, arg_val):
 
 def validate_args(arg_names, arg_vals):
     '''
-        return:
-            True or False depending on whether or not every arg_val is appropriate for
-            its corresponding arg_name
-        inputs:
-            arg_names: list of strings
-            arg_vals: list of strings that should be parallel to arg_names
+    return:
+        True or False depending on whether or not every arg_val is appropriate for
+        its corresponding arg_name
+    inputs:
+        arg_names: list of strings
+        arg_vals: list of strings that should be parallel to arg_names
     '''
     # Every arg_name should have a corresponding arg_value
     if len(arg_names) != len(arg_vals):
@@ -92,9 +94,10 @@ def validate_args(arg_names, arg_vals):
         if not validate_arg(arg_name, arg_val):
             return False
 
-    if (ARG_KMS not in arg_names or ARG_MILES not in arg_names) and ARG_TIME not in arg_names:
+    if ARG_KMS not in arg_names and ARG_MILES not in arg_names and ARG_TIME not in arg_names:
         print("You must supply either the distance of duration of the run")
         return False
+
     if ARG_KMS in arg_names and ARG_MILES in arg_names:
         print("Supply your distance in miles or in kms, but not both!")
         return False
@@ -103,11 +106,11 @@ def validate_args(arg_names, arg_vals):
 
 def get_csv_vals(arg_names, arg_vals):
     '''
-        return:
-            a list of strings(in the desired order as determined by the csv header) to write to the log csv file 
-        inputs:
-            arg_names: list of strings
-            arg_vals: list of strings parallel to arg_names
+    return:
+        a list of strings(in the desired order as determined by the csv header) to write to the log csv file
+    inputs:
+        arg_names: list of strings
+        arg_vals: list of strings parallel to arg_names
     '''
     csv_line = []
     # TODO: Sort of gross
@@ -119,7 +122,8 @@ def get_csv_vals(arg_names, arg_vals):
                 csv_line.append('')
         else:
             index = arg_names.index(csv_col)
-            csv_line.append(arg_vals[index])
+            # Replace commas to avoid issues with csv. Commas should only appear in notes anyhow
+            csv_line.append(arg_vals[index].replace(',', '.'))
 
     return csv_line
 
@@ -131,15 +135,15 @@ def write_line(file_handle, vals_lst):
 # Order matters
 def log(csv_values, fname):
     '''
-        return:
-            Nothing. Writes the csv_values to a file specified by fname
-        inputs:
-            csv_values: list of strings to write on a single line in a csv file
-            fname: string name of the file to write the given csv values to
+    return:
+        Nothing. Writes the csv_values to a file specified by fname
+    inputs:
+        csv_values: list of strings to write on a single line in a csv file
+        fname: string name of the file to write the given csv values to
     '''
     file_exists = os.path.isfile(fname)
     print('does file exist: ', file_exists)
-    with open(fname, 'w') as f:
+    with open(fname, 'a') as f:
         if not file_exists:
             write_line(f, CSV_HEADER_NAMES)
         write_line(f, csv_values)
